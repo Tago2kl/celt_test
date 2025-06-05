@@ -4,6 +4,7 @@ import threading
 import torch
 import cv2
 import numpy as np
+import queue
 from ultralytics import YOLO
 
 pygame.init()
@@ -13,20 +14,17 @@ clock = pygame.time.Clock()
 
 # --- YOLO setup ---#
 model = YOLO("Detection_Models/yolo11n-pose.pt")
-cap = cv2.VideoCapture("Assets/ppl.webm")
+cap = cv2.VideoCapture("Assets/pplwalk.mp4")
 latest_ankles = []
 lock = threading.Lock()
+frame_queue = queue.Queue(maxsize=2)
 
 def yolo_thread_func():
     global latest_ankles
-
-    frame_count = 0
     while True:
-        ret, frame = cap.read()
-        if not ret:
-            continue
-        frame_count += 1
-        if frame_count % 1 != 0:
+        try:
+            frame = frame_queue.get(timeout=1)
+        except queue.Empty:
             continue
         # Resize frame for faster inference
         small_frame = cv2.resize(frame, (640, 360))
@@ -110,13 +108,12 @@ while True:
     ret, frame = cap.read()
     if ret:
         last_frame = frame.copy()
-    if last_frame is not None:
-        frame_rgb = cv2.cvtColor(last_frame, cv2.COLOR_BGR2RGB)
-        frame_rgb = cv2.resize(frame_rgb, (WIDTH, HEIGHT))
-        frame_surface = pygame.surfarray.make_surface(np.rot90(frame_rgb))
-        screen.blit(frame_surface, (0, 0))
-    else:
-        screen.fill((0, 0, 0))  # fallback if no frame ever
+        try:
+            frame_queue.put_nowait(frame.copy())
+        except queue.Full:
+            pass  # Drop frame if queue is full
+
+    screen.fill((0, 0, 0))
 
     with lock:
         ankles = latest_ankles.copy()
@@ -138,3 +135,6 @@ while True:
         point.draw(screen, pointsize)
     pygame.display.flip()
     clock.tick(29)
+
+cap.release()
+pygame.quit()
