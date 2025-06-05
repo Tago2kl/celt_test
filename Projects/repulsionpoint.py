@@ -18,8 +18,8 @@ REPULSE_RADIUS = 250
 clock = pygame.time.Clock()
 
 # --- YOLO setup ---#
-model = YOLO("../../../Documents/codefolder/pycharmtest/opencv/models/yolo11n-pose.pt")
-cap = cv2.VideoCapture("../../../Documents/codefolder/pycharmtest/opencv/assets/pplwalk.mp4")
+model = YOLO("Detection_Models/yolo11n-pose.pt")
+cap = cv2.VideoCapture("Assets/pplwalk.mp4")
 latest_ankles = []
 lock = threading.Lock()
 
@@ -101,7 +101,7 @@ running = True
 line_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
 
 while running:
-    screen.fill((0, 0, 0))
+    screen.fill((0, 0, 0,0))
     line_surface.fill((0, 0, 0, 0))
 
     for event in pygame.event.get():

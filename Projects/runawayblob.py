@@ -11,13 +11,13 @@ pygame.init()
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 WIDTH, HEIGHT = screen.get_size()
 clock = pygame.time.Clock()
-tarzan_img = pygame.image.load("../../../Documents/codefolder/pycharmtest/opencv/assets/minitarzan.png").convert_alpha()
+tarzan_img = pygame.image.load("Assets/minitarzan.png").convert_alpha()
 x,y=tarzan_img.get_size()
 tarzan_img = pygame.transform.scale(tarzan_img, (int(x*2), int(y*2)))
 
 # --- YOLO setup ---#
-model = YOLO("../../../Documents/codefolder/pycharmtest/opencv/models/yolo11n-pose.pt")
-cap = cv2.VideoCapture("../../../Documents/codefolder/pycharmtest/opencv/assets/pplwalk.mp4")
+model = YOLO("Detection_Models/yolo11n-pose.pt")
+cap = cv2.VideoCapture("Assets/pplwalk.mp4")
 latest_ankles = []
 lock = threading.Lock()
 

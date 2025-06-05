@@ -14,8 +14,8 @@ WIDTH, HEIGHT = screen.get_size()
 clock = pygame.time.Clock()
 
 # --- YOLO and Video Setup ---
-model = YOLO("../../../Documents/codefolder/pycharmtest/opencv/models/yolo11n-pose.pt")
-cap = cv2.VideoCapture("../../../Documents/codefolder/pycharmtest/opencv/assets/pplwalk.mp4")
+model = YOLO("Detection_Models/yolo11n-pose.pt")
+cap = cv2.VideoCapture("Assets/pplwalk.mp4")
 latest_ankles = []
 lock = threading.Lock()
 

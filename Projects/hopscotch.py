@@ -15,14 +15,10 @@ WIDTH, HEIGHT = screen.get_size()
 clock = pygame.time.Clock()
 
 # --- YOLO and Video Setup ---
-model = YOLO("../../../Documents/codefolder/pycharmtest/opencv/models/yolo11n-pose.pt")
-cap = cv2.VideoCapture("../../../Documents/codefolder/pycharmtest/opencv/assets/pplwalk.mp4")
+model = YOLO("Detection_Models/yolo11n-pose.pt")
+cap = cv2.VideoCapture("Assets/pplwalk.mp4")
 latest_ankles = []
 lock = threading.Lock()
-
-# Load Tarzan image
-tarzan_img = pygame.image.load('../../../Documents/codefolder/pycharmtest/opencv/assets/img.png')
-tarzan_img = pygame.transform.scale(tarzan_img, (WIDTH, HEIGHT))
 
 def generate_hopscotch_pattern(num_spaces=6):
     """generate a hopscotch pattern with at least 2 doubles &  never 3 doubles in a row."""

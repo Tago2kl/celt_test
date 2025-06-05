@@ -52,7 +52,7 @@ def yolo_thread_func(cap, model):
         print(f"YOLO thread error: {e}")
 
 # --- Load coin video frames ---#
-coin_cap = cv2.VideoCapture('../../../Documents/codefolder/pycharmtest/opencv/assets/spincoincole.mp4')
+coin_cap = cv2.VideoCapture('Assets/spincoincole.mp4')
 coin_frames = []
 
 while True:
@@ -79,12 +79,12 @@ clock = pygame.time.Clock()
 
 # --- YOLO and threading setup ---
 try:
-    model = YOLO("../../../Documents/codefolder/pycharmtest/opencv/models/yolo11n-pose.pt")
+    model = YOLO("Detection_Models/yolo11n-pose.pt")
 except Exception as e:
     print(f"Error loading YOLO model: {e}")
     exit(1)
 
-cap = cv2.VideoCapture("../../../Documents/codefolder/pycharmtest/opencv/assets/ppl.webm")
+cap = cv2.VideoCapture("Assets/ppl.webm")
 if not cap.isOpened():
     print("Error: Could not open video file ppl.webm")
     exit(1)

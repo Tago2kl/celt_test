@@ -1,4 +1,3 @@
-
 import pygame
 import math
 import threading
@@ -13,8 +12,8 @@ WIDTH, HEIGHT = screen.get_size()
 clock = pygame.time.Clock()
 
 # --- YOLO setup ---#
-model = YOLO("../../../Documents/codefolder/pycharmtest/opencv/models/yolo11n-pose.pt")
-cap = cv2.VideoCapture("../../../Documents/codefolder/pycharmtest/opencv/assets/pplwalk.mp4")
+model = YOLO("Detection_Models/yolo11n-pose.pt")
+cap = cv2.VideoCapture("Assets/ppl.webm")
 latest_ankles = []
 lock = threading.Lock()
 
@@ -53,24 +52,22 @@ if torch.cuda.is_available():
 threading.Thread(target=yolo_thread_func, daemon=True).start()
 
 class GridPoint:
-    def __init__(self, home_x, home_y):
+    def __init__(self, home_x, home_y, size):
         self.home_x = home_x
         self.home_y = home_y
         self.x = float(home_x)
         self.y = float(home_y)
         self.vx = 0.0
         self.vy = 0.0
+        self.ogsize = size
+        self.size = size
 
-    # dont make dampenig over 1  plz
     def update(self, repulse_points, repulse_radius, spring_k=0.0008, damping=0.9, repulse_strength=8.0):
-        # diffrence from home
         dx = self.home_x - self.x
         dy = self.home_y - self.y
-        #more dis -> faster
         self.vx += dx * spring_k
         self.vy += dy * spring_k
 
-        # repulsion from points
         for rx, ry in repulse_points:
             dist = math.hypot(self.x - rx, self.y - ry)
             if repulse_radius > dist > 1:
@@ -78,28 +75,25 @@ class GridPoint:
                 self.vx += (self.x - rx) / dist * force
                 self.vy += (self.y - ry) / dist * force
 
-        # Damping
         self.vx *= damping
         self.vy *= damping
 
-        # Update position
         self.x += self.vx
         self.y += self.vy
 
-    def draw(self, surface, radius, max_dist=150):
+    def draw(self, surface, radius, max_dist=150, max_size=8):
         dist = math.hypot(self.x - self.home_x, self.y - self.home_y)
-        t = min(dist / max_dist, 1.0)  # Clamp between 0 and 1
-
+        t = min(dist / max_dist, 1.0)
+        self.size = int(self.ogsize + (max_size - self.ogsize) * t)
         r = int(255 * (1 - t))
         g = 255
         b = int(255 * (1 - t))
-
-        pygame.draw.circle(surface, (r, g, b), (int(self.x), int(self.y)), radius)
+        pygame.draw.circle(surface, (r, g, b), (int(self.x), int(self.y)), self.size)
 
 # Grid setup
 pointsize = 4
-size = [26, 50]  # rows, cols
-repulse_radius = 150
+size = [int(26*1.5), int(50*1.5)]  # rows, cols
+repulse_radius = 100
 grid_points = []
 x_spacing = WIDTH // (size[1] + 1)
 y_spacing = HEIGHT // (size[0] + 1)
@@ -108,9 +102,22 @@ for row in range(1, size[0] + 1):
     for col in range(1, size[1] + 1):
         x = col * x_spacing
         y = row * y_spacing
-        grid_points.append(GridPoint(x, y))
+        grid_points.append(GridPoint(x, y, pointsize))
+
+last_frame = None
 
 while True:
+    ret, frame = cap.read()
+    if ret:
+        last_frame = frame.copy()
+    if last_frame is not None:
+        frame_rgb = cv2.cvtColor(last_frame, cv2.COLOR_BGR2RGB)
+        frame_rgb = cv2.resize(frame_rgb, (WIDTH, HEIGHT))
+        frame_surface = pygame.surfarray.make_surface(np.rot90(frame_rgb))
+        screen.blit(frame_surface, (0, 0))
+    else:
+        screen.fill((0, 0, 0))  # fallback if no frame ever
+
     with lock:
         ankles = latest_ankles.copy()
     repulse_points = [
@@ -118,17 +125,16 @@ while True:
         for left_ankle, right_ankle in ankles
         for ankle in [left_ankle, right_ankle]
     ]
-    mouse  = pygame.mouse.get_pos()
+    mouse = pygame.mouse.get_pos()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
 
-    screen.fill((0, 0, 0))
     for point in grid_points:
         point.update(repulse_points, repulse_radius)
-        point.update([mouse], repulse_radius)  # Wrap mouse in a list
-        point.draw(screen,pointsize)
+        point.update([mouse], repulse_radius)
+        point.draw(screen, pointsize)
     pygame.display.flip()
-    clock.tick(60)
+    clock.tick(29)
